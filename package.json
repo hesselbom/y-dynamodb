@@ -1,0 +1,30 @@
+{
+  "name": "y-dynamodb",
+  "version": "0.1.0",
+  "author": "Viktor Hesselbom <viktor@hesselbom.net>",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "test": "rollup -c && nyc --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node ./dist/test.cjs",
+    "dist": "rollup -c",
+    "lint": "standard",
+    "preversion": "npm run lint && npm run test && npm run clean && npm run dist && test -e dist/y-dynamodb.cjs",
+    "debug": "concurrently 'rollup -wc' 'http-server -o .'"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.809.0",
+    "lib0": "^0.2.35",
+    "yjs": "^13.4.7"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "nyc": "^15.1.0",
+    "rollup": "^2.20.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "standard": "^14.3.4"
+  },
+  "peerDependencies": {
+    "yjs": "^13.0.0"
+  }
+}
