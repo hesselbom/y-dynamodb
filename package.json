@@ -1,8 +1,13 @@
 {
   "name": "y-dynamodb",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Viktor Hesselbom <viktor@hesselbom.net>",
+  "description": "DynamoDB database adapter for Yjs",
   "license": "MIT",
+  "type": "module",
+  "main": "./dist/y-dynamodb.cjs",
+  "module": "./src/y-dynamodb.js",
+  "sideEffects": false,
   "scripts": {
     "clean": "rm -rf dist",
     "test": "rollup -c && nyc --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node ./dist/test.cjs",
@@ -11,6 +16,10 @@
     "preversion": "npm run lint && npm run test && npm run clean && npm run dist && test -e dist/y-dynamodb.cjs",
     "debug": "concurrently 'rollup -wc' 'http-server -o .'"
   },
+  "files": [
+    "dist/*",
+    "src/*"
+  ],
   "dependencies": {
     "aws-sdk": "^2.809.0",
     "lib0": "^0.2.35",
