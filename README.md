@@ -26,6 +26,8 @@ const Y = require('yjs')
 const config = {
   aws: {
     region: 'us-west-2',
+    accessKeyId: 'accessKeyId',
+    secretAccessKey: 'secretAccessKey',
     endpoint: 'http://localhost:8000'
   },
   tableName: 'test-y-dynamodb'
