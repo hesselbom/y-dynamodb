@@ -30,6 +30,7 @@ const config = {
     secretAccessKey: 'secretAccessKey',
     endpoint: 'http://localhost:8000'
   },
+  skipCreateTable: true, // skips creating table, assumes it already exists
   tableName: 'test-y-dynamodb'
 }
 const persistence = DynamoDbPersistence(config)

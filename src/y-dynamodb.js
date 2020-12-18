@@ -496,7 +496,9 @@ const DynamoDbPersistence = (config) => {
     return currentTransaction
   }
 
-  transact((db, config) => createTable(db, config))
+  if (!config.skipCreateTable) {
+    transact((db, config) => createTable(db, config))
+  }
 
   const getYDoc = (docName) => (
     transact(async (db, config) => {
