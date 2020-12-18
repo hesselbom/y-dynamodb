@@ -480,9 +480,7 @@ const storeUpdate = async (db, tableName, docName, update) => {
 }
 
 const DynamoDbPersistence = (config) => {
-  AWS.config.update(config.aws)
-
-  const db = new AWS.DynamoDB()
+  const db = new AWS.DynamoDB(config.aws)
   let currentTransaction = Promise.resolve()
 
   // Execute an transaction on a database. This will ensure that other processes are currently not writing.
