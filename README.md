@@ -104,6 +104,32 @@ Delete a store meta value.
 Internally y-dynamodb stores incremental updates. You can merge all document
 updates to a single entry. You probably never have to use this.
 
+## AWS CDK
+
+Here's an example stack if you're using AWS CDK:
+
+```js
+class AwsCdkStack extends cdk.Stack {
+  constructor (scope, id, props) {
+    super(scope, id, props)
+
+    const docsTable = new dynamodb.Table(this, 'test-y-dynamodb', {
+      partitionKey: { name: 'ydocname', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'ykeysort', type: dynamodb.AttributeType.BINARY },
+      tableName: 'test-y-dynamodb'
+    })
+
+    const user = new iam.User(this, 'YDatabaseUser', { userName: 'YDatabaseUser' })
+    const accessKey = new iam.CfnAccessKey(this, 'myAccessKey', { userName: user.userName })
+
+    new cdk.CfnOutput(this, 'accessKeyId', { value: accessKey.ref })
+    new cdk.CfnOutput(this, 'secretAccessKey', { value: accessKey.attrSecretAccessKey })
+
+    docsTable.grantFullAccess(user)
+  }
+}
+```
+
 ## License
 
 y-dynamodb is licensed under the [MIT License](./LICENSE).
