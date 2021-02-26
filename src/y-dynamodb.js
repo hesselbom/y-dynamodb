@@ -500,8 +500,8 @@ const DynamoDbPersistence = (config) => {
     transact((db, config) => createTable(db, config))
   }
 
-  const getYDoc = (docName) => (
-    transact(async (db, config) => {
+  const getYDoc = (docName, outsideTransactionQueue) => {
+    const callback = async (db, config) => {
       const updates = await getDynamoDbUpdates(db, config.tableName, docName)
       const ydoc = new Y.Doc()
       ydoc.transact(() => {
@@ -513,20 +513,30 @@ const DynamoDbPersistence = (config) => {
         await flushDocument(db, config.tableName, docName, Y.encodeStateAsUpdate(ydoc), Y.encodeStateVector(ydoc))
       }
       return ydoc
-    })
-  )
+    }
+
+    return outsideTransactionQueue ? callback(db, config) : transact(callback)
+  }
 
   return {
     transact,
     getYDoc,
-    storeUpdate: (docName, update) => transact((db, config) => storeUpdate(db, config.tableName, docName, update)),
-    flushDocument: (docName) => transact(async (db, config) => {
-      const updates = await getDynamoDbUpdates(db, config.tableName, docName)
-      const { update, sv } = mergeUpdates(updates)
-      return flushDocument(db, config.tableName, docName, update, sv)
-    }),
-    getStateVector: (docName) => (
-      transact(async (db, config) => {
+    storeUpdate: (docName, update, outsideTransactionQueue) => {
+      const callback = (db, config) => storeUpdate(db, config.tableName, docName, update)
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    flushDocument: (docName, outsideTransactionQueue) => {
+      const callback = async (db, config) => {
+        const updates = await getDynamoDbUpdates(db, config.tableName, docName)
+        const { update, sv } = mergeUpdates(updates)
+        return flushDocument(db, config.tableName, docName, update, sv)
+      }
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    getStateVector: (docName, outsideTransactionQueue) => {
+      const callback = async (db, config) => {
         const { clock, sv } = await readStateVector(db, config.tableName, docName)
         let curClock = -1
         /* istanbul ignore next */
@@ -542,41 +552,53 @@ const DynamoDbPersistence = (config) => {
           await flushDocument(db, config.tableName, docName, update, sv)
           return sv
         }
-      })
-    ),
+      }
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
     getDiff: async (docName, stateVector) => {
       const ydoc = await getYDoc(docName)
       return Y.encodeStateAsUpdate(ydoc, stateVector)
     },
-    clearDocument: (docName) => (
-      transact(async (db, config) => {
+    clearDocument: (docName, outsideTransactionQueue) => {
+      const callback = async (db, config) => {
         await dynamoDbDelete(db, config.tableName, docName, createDocumentStateVectorKey(docName))
         await clearRange(db, config.tableName, docName, createDocumentFirstKey(docName), createDocumentLastKey(docName))
-      })
-    ),
-    setMeta: (docName, metaKey, value) => (
-      transact((db, config) => dynamoDbPut(db, config.tableName, docName, createDocumentMetaKey(docName, metaKey), buffer.encodeAny(value)))
-    ),
-    getMeta: (docName, metaKey) => (
-      transact(async (db, config) => {
+      }
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    setMeta: (docName, metaKey, value, outsideTransactionQueue) => {
+      const callback = (db, config) => dynamoDbPut(db, config.tableName, docName, createDocumentMetaKey(docName, metaKey), buffer.encodeAny(value))
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    getMeta: (docName, metaKey, outsideTransactionQueue) => {
+      const callback = async (db, config) => {
         const res = await dynamoDbGet(db, config.tableName, docName, createDocumentMetaKey(docName, metaKey))
         if (res === null) {
           return// return void
         }
         return buffer.decodeAny(res)
-      })
-    ),
-    delMeta: (docName, metaKey) => (
-      transact((db, config) => dynamoDbDelete(db, config.tableName, docName, createDocumentMetaKey(docName, metaKey)))
-    ),
-    getMetas: (docName) => (
-      transact(async (db, config) => {
+      }
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    delMeta: (docName, metaKey, outsideTransactionQueue) => {
+      const callback = (db, config) => dynamoDbDelete(db, config.tableName, docName, createDocumentMetaKey(docName, metaKey))
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    },
+    getMetas: (docName, outsideTransactionQueue) => {
+      const callback = async (db, config) => {
         const data = await getDynamoDbMetaData(db, config.tableName, docName)
         const metas = new Map()
         data.forEach(v => { metas.set(v.ykeysort[3], buffer.decodeAny(v.value)) })
         return metas
-      })
-    )
+      }
+
+      return outsideTransactionQueue ? callback(db, config) : transact(callback)
+    }
   }
 }
 

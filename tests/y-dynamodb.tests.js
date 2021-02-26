@@ -1,6 +1,6 @@
 import * as t from 'lib0/testing.js'
 const Y = require('yjs')
-const DynamoDbPersistence = require('../src/y-dynamodb.js')
+const DynamoDbPersistence = require('./y-dynamodb')
 const { PREFERRED_TRIM_SIZE, getDynamoDbUpdates } = DynamoDbPersistence
 
 const config = {
