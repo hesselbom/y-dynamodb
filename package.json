@@ -21,7 +21,6 @@
   ],
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.16.0",
-    "aws-sdk": "^2.809.0",
     "lib0": "^0.2.35",
     "yjs": "^13.0.0"
   },
