@@ -385,7 +385,8 @@ const clearRange = (db, tableName, docName, gte, lt) => new Promise((resolve, re
         // eslint-disable-next-line
         promises.push(new Promise((resolve2, reject2) => {
           const command = new BatchWriteItemCommand(batchParams)
-          db.send(command, (err2, data2) => {            /* istanbul ignore if */
+          db.send(command, (err2, data2) => {
+            /* istanbul ignore if */
             if (err2) {
               reject2(err2)
             } else {
