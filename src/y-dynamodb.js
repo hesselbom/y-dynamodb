@@ -1,5 +1,13 @@
 const Y = require('yjs')
-const AWS = require('aws-sdk')
+const {
+  BatchWriteItemCommand,
+  CreateTableCommand,
+  DeleteItemCommand,
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+  QueryCommand
+} = require('@aws-sdk/client-dynamodb')
 const encoding = require('lib0/dist/encoding.cjs')
 const decoding = require('lib0/dist/decoding.cjs')
 const binary = require('lib0/dist/binary.cjs')
@@ -24,10 +32,11 @@ const createTable = (db, config) => (
       ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 }
     }
 
-    db.createTable(params, (err, data) => {
+    const command = new CreateTableCommand(params)
+    db.send(command, (err, data) => {
       /* istanbul ignore next */
       if (err) {
-        if (err.code === 'ResourceInUseException') {
+        if (err.name === 'ResourceInUseException') {
           console.log('Table already exists.')
           resolve()
         } else {
@@ -142,7 +151,8 @@ const getCurrentUpdateClock = (db, tableName, docName) => new Promise((resolve, 
     ScanIndexForward: false
   }
 
-  db.query(params, (err, data) => {
+  const command = new QueryCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -178,7 +188,8 @@ const getDynamoDbMetaData = (db, tableName, docName) => new Promise((resolve, re
     ScanIndexForward: true
   }
 
-  db.query(params, (err, data) => {
+  const command = new QueryCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -213,7 +224,8 @@ const getDynamoDbUpdates = (db, tableName, docName) => new Promise((resolve, rej
     ScanIndexForward: true
   }
 
-  db.query(params, (err, data) => {
+  const command = new QueryCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -241,7 +253,8 @@ const dynamoDbDelete = (db, tableName, docName, key) => new Promise((resolve, re
     TableName: tableName
   }
 
-  db.deleteItem(params, (err, data) => {
+  const command = new DeleteItemCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -266,7 +279,8 @@ const dynamoDbGet = (db, tableName, docName, key) => new Promise((resolve, rejec
     TableName: tableName
   }
 
-  db.getItem(params, (err, data) => {
+  const command = new GetItemCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -296,7 +310,8 @@ const dynamoDbPut = (db, tableName, docName, key, val) => new Promise((resolve, 
     }
   }
 
-  db.putItem(params, (err, data) => {
+  const command = new PutItemCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       console.error('Unable to add item. Error JSON:', JSON.stringify(err, null, 2))
@@ -331,7 +346,8 @@ const clearRange = (db, tableName, docName, gte, lt) => new Promise((resolve, re
     ScanIndexForward: true
   }
 
-  db.query(params, (err, data) => {
+  const command = new QueryCommand(params)
+  db.send(command, (err, data) => {
     /* istanbul ignore if */
     if (err) {
       reject(err)
@@ -368,8 +384,8 @@ const clearRange = (db, tableName, docName, gte, lt) => new Promise((resolve, re
 
         // eslint-disable-next-line
         promises.push(new Promise((resolve2, reject2) => {
-          db.batchWriteItem(batchParams, (err2, data2) => {
-            /* istanbul ignore if */
+          const command = new BatchWriteItemCommand(batchParams)
+          db.send(command, (err2, data2) => {            /* istanbul ignore if */
             if (err2) {
               reject2(err2)
             } else {
@@ -480,7 +496,7 @@ const storeUpdate = async (db, tableName, docName, update) => {
 }
 
 const DynamoDbPersistence = (config) => {
-  const db = new AWS.DynamoDB(config.aws)
+  const db = new DynamoDBClient(config.aws)
   let currentTransaction = Promise.resolve()
 
   // Execute an transaction on a database. This will ensure that other processes are currently not writing.
