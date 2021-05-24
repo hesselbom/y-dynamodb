@@ -598,7 +598,8 @@ const DynamoDbPersistence = (config) => {
       }
 
       return outsideTransactionQueue ? callback(db, config) : transact(callback)
-    }
+    },
+    getDbInstance: () => db
   }
 }
 

@@ -1,5 +1,6 @@
 import * as t from 'lib0/testing.js'
 const Y = require('yjs')
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb')
 const DynamoDbPersistence = require('./y-dynamodb')
 const { PREFERRED_TRIM_SIZE, getDynamoDbUpdates } = DynamoDbPersistence
 
@@ -221,4 +222,11 @@ export const testMisc = async tc => {
   t.assert(sv.byteLength === 1)
 
   // await dynamoDbPersistence.destroy()
+}
+
+export const testGetDbInstance = async () => {
+  const dynamoDbPersistence = DynamoDbPersistence(config)
+  const dbInstance = dynamoDbPersistence.getDbInstance()
+
+  t.assert(dbInstance instanceof DynamoDBClient)
 }
